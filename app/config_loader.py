@@ -6,7 +6,7 @@ from environs import Env
 @dataclass
 class BotSettings:
     token: str
-    admins: list[int]
+    admins: int
     use_redis: bool
 
 
@@ -27,7 +27,7 @@ class Config:
 def load_config() -> Config:
     env = Env()
     env.read_env()
-    
+
     return Config(
         bot_settings=BotSettings(
             token=env.str("TG_BOT_TOKEN"),
