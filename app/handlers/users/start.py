@@ -15,6 +15,9 @@ async def admin_start_process_message(m: types.Message):
     await m.answer("Welcome, Administrator!")
 
 
+
+
+
 def register_start(dp: Dispatcher):
     dp.register_message_handler(admin_start_process_message, CommandStart(), BotAdminFilter())
     dp.register_message_handler(start_process_message, CommandStart())
