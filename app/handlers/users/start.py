@@ -102,7 +102,7 @@ async def check_correct_group_format(callback: types.CallbackQuery, state: FSMCo
         # await NewUser.menu_1.set()
         # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В ТАБЛИЦУ
     else:
-        await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=menu_1)
+        await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=menu_1_1_keyboard)
 
 
 ########################################################################################################################
@@ -139,7 +139,7 @@ async def check_correct_return(callback: types.CallbackQuery, state: FSMContext,
         # await NewUser.menu_1.set()
         # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В ТАБЛИЦУ
     else:
-        await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=menu_1)
+        await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=menu_1_1_keyboard)
 
 
 ########################################################################################################################
@@ -214,10 +214,45 @@ async def check_correct_cancellation(callback: types.CallbackQuery, state: FSMCo
         # await NewUser.menu_1.set()
         # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В ТАБЛИЦУ
     else:
-        await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=menu_1)
+        await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=menu_1_1_keyboard)
 
 
 
+
+########################################################################################################################
+                                    # Оплата учеников
+# просим ввести ссылочку на ученика +
+async def send_message_with_link_4(callback: types.CallbackQuery):
+    await callback.message.edit_text("Введите ссылку на ученика:")
+    await menu_1_1.get_back_link_4.set()
+
+
+# хватаем ссылочку на ученика +
+async def get_link_4(message: types.Message, state: FSMContext, db: AsyncSession):
+    async with state.proxy() as data:
+        data["link"] = message.text
+    await message.answer("Какой вопрос возник, касательно оплаты?")
+    await menu_1_1.question_cash.set()
+
+
+# Просим ввести вопрос  касательно оплаты?
+async def get_question_cash(message: types.Message, state: FSMContext, db: AsyncSession):
+    question_cash = message.text
+    async with state.proxy() as data:
+        await message.answer(
+            f"Давай проверим твои данные:\n\t\t ссылка на ученика: {data['link']} \n\t\t Проблема возникшая по оплате: {question_cash}\n Все верно??",
+            reply_markup=yesno_keyboard_markup)
+        await menu_1_1.check_question_cash.set()
+
+
+async def check_correct_question_cash(callback: types.CallbackQuery, state: FSMContext, db: AsyncSession):
+    if callback.data == "yes":
+        await callback.message.edit_text("Прекрасно, лови меню✅", reply_markup=menu_1)
+        # await NewUser.menu_1.set()
+        # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В ТАБЛИЦУ
+    else:
+        await callback.message.edit_text("Ничего страшного, начнем зановоggeg", reply_markup=menu_1)
+    state.finish()
 
 
 
@@ -255,20 +290,19 @@ def register_start(dp: Dispatcher):
     dp.register_message_handler(get_link_2, state=menu_1_1.get_back_link_2)
     dp.register_message_handler(get_cause_return, state=menu_1_1.couse_return)
     dp.register_callback_query_handler(check_correct_return, state=menu_1_1.check_correct_return)
-    #Отмена/перенос занятия
-    dp.register_callback_query_handler(send_message_with_link_3, text="three", state="*") # +
-    dp.register_message_handler(get_link_3, state=menu_1_1.get_back_link_3) # +
-    dp.register_callback_query_handler(check_twelve_hours, state=menu_1_1.yes_no_3) # +
-    dp.register_message_handler(get_cause_cancellation, state=menu_1_1.concellation) # +
-    dp.register_message_handler(get_old_data, state=menu_1_1.old_data) # +
-    dp.register_message_handler(get_new_data, state=menu_1_1.new_data) # +
-    dp.register_callback_query_handler(check_correct_cancellation, state=menu_1_1.check_correct_cancellation) # +
-
-
-
-
-
-
+    # Отмена/перенос занятия
+    dp.register_callback_query_handler(send_message_with_link_3, text="three", state="*")  # +
+    dp.register_message_handler(get_link_3, state=menu_1_1.get_back_link_3)  # +
+    dp.register_callback_query_handler(check_twelve_hours, state=menu_1_1.yes_no_3)  # +
+    dp.register_message_handler(get_cause_cancellation, state=menu_1_1.concellation)  # +
+    dp.register_message_handler(get_old_data, state=menu_1_1.old_data)  # +
+    dp.register_message_handler(get_new_data, state=menu_1_1.new_data)  # +
+    dp.register_callback_query_handler(check_correct_cancellation, state=menu_1_1.check_correct_cancellation)  # +
+    #Оплата ученика
+    dp.register_callback_query_handler(send_message_with_link_4, text="four", state="*") #+
+    dp.register_message_handler(get_link_4, state=menu_1_1.get_back_link_4)
+    dp.register_message_handler(get_question_cash, state=menu_1_1.question_cash)
+    dp.register_callback_query_handler(check_correct_question_cash, state=menu_1_1.check_question_cash)
     # dp.register_message_handler(adding_student_by_link,
     #                            CommandStart(deep_link=re.compile(r"^[A-Z]{4,15}$")))
 

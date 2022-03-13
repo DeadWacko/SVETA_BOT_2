@@ -18,6 +18,8 @@ class menu_1_1(StatesGroup):
     get_back_link = State()
     get_back_link_2 = State()
     get_back_link_3 = State()
+    get_back_link_4 = State()
+
     yes_no_3 = State()
     concellation = State()
     old_data = State()
@@ -29,4 +31,6 @@ class menu_1_1(StatesGroup):
     check_correct_format = State()
     reason_return = State()
     twelve_hour = State()
+    question_cash = State()
+    check_question_cash = State()
 
