@@ -14,3 +14,8 @@ class NewUser(StatesGroup):
 
 
 
+class menu_1_1(StatesGroup):
+    change_format = State()
+    reason_return = State()
+    twelve_hour = State()
+

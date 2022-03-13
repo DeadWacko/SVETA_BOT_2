@@ -62,5 +62,5 @@ seven = InlineKeyboardButton('Изменение данных ученика', c
 eight = InlineKeyboardButton('Ученик не получил сертификат', callback_data='eight')
 nine = InlineKeyboardButton('Негатив на преподавателя/кого-то еще', callback_data='nine')
 exit = InlineKeyboardButton('EXIT', callback_data='exit')
-menu_1_1 = InlineKeyboardMarkup().add(one).add(two).add(three).add(four).add(five).add(six).add(seven).add(eight).add(nine).add(exit)
+menu_1_1_keyboard = InlineKeyboardMarkup().add(one).add(two).add(three).add(four).add(five).add(six).add(seven).add(eight).add(nine).add(exit)
 

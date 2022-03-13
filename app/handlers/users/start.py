@@ -9,10 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.util import NoneType
 from app.db_api.models import User
 
-from app.keyboards.inline.first_choise import team_keyboard, yesno_keyboard_markup, menu_1, menu_1_1
+from app.keyboards.inline.first_choise import team_keyboard, yesno_keyboard_markup, menu_1, menu_1_1_keyboard
 
-# кнопка старт ✅✅✅
-from app.states import NewUser
+from app.states import NewUser, menu_1_1
 
 
 async def start(message: types.Message, db: AsyncSession):
@@ -35,15 +34,11 @@ async def answer_team(callback: types.CallbackQuery, state: FSMContext, db: Asyn
         data["team_name"] = callback.data
     await NewUser.add_fullname.set()  # туть мы бросаем в следующее состояние
     await callback.message.answer("Введи свое ФИО")
-
-
 async def add_fullname(message: types.Message, state: FSMContext, db: AsyncSession):
     async with state.proxy() as data:
         data["full_name"] = message.text
     await message.answer("ВВЕДИ СВОЙ ID")
     await NewUser.add_ID.set()  # туть мы бросаем в следующее состояние
-
-
 async def add_kodland_ID(message: types.Message, state: FSMContext, db: AsyncSession):
     user_kodland_id = message.text
     async with state.proxy() as data:
@@ -51,26 +46,79 @@ async def add_kodland_ID(message: types.Message, state: FSMContext, db: AsyncSes
             f"Давай проверим твои данные:\n\t\t Номер команды: {data['team_name']} \n\t\t Твое ФИО: {data['full_name']}\n\t\t Твой ID: {user_kodland_id}\n Все верно??",
             reply_markup=yesno_keyboard_markup)
         await NewUser.check_user_validation.set()
-
-
 # Проверяем все ли правильно ввел пользователь. если да- кидаем основное меню. если нет - кидаем в начало
 async def check_user_validation(callback: types.CallbackQuery, state: FSMContext, db: AsyncSession):
     if callback.data == "yes":
         await callback.message.answer("Прекрасно, лови меню✅", reply_markup=menu_1)
         await NewUser.menu_1.set()
+        # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В БД
     else:
         await callback.message.answer("Ничего страшного, начнем заново", reply_markup=team_keyboard)
         await NewUser.choice_team.set()
 
+
 async def first_menu(callback: types.CallbackQuery, state: FSMContext, db: AsyncSession):
     if callback.data == "questions_about_students":
-        await callback.message.answer("Прекрасно, лови меню✅", reply_markup=menu_1_1)
-        await NewUser.menu_1.set()
+        await callback.message.answer("Прекрасно, лови меню✅", reply_markup=menu_1_1_keyboard)
+
     elif callback.data == "teacher_related_questions":
         pass
     elif callback.data == "other_questions":
         await callback.message.answer("Ничего страшного, начнем заново", reply_markup=team_keyboard)
         await NewUser.choice_team.set()
+
+
+#НОВЫЕ ФУНКЦИИ##########################################################################################################
+
+#Обработка клавиатуры
+async def changing_format_training(callback: types.CallbackQuery, state: FSMContext, db: AsyncSession):
+    """кнопка смены формата обучения. Кидаем в состояние где преподаватель введет новый формат обучения"""
+    await callback.message.answer("На какой формат будет смена?")
+
+    await menu_1_1.change_format.set()
+
+async def add_new_changing_format(message: types.Message, state: FSMContext, db: AsyncSession):
+    new_format = message.text
+    #ТУТЬ НАДО ЭТИ ДАННЫЕ ПОДГРУЗИТЬ В FSM И ПОСЛЕ, ПРИ НАЖАТИИ YES ОТПРАВИТЬ ЭТО В ТАБЛИЦУ
+
+
+
+    await message.answer(
+        f"Давай проверим твои данные:\n\t\t Новый формат: {new_format}\n Все верно??",
+        reply_markup=yesno_keyboard_markup)
+    await NewUser.check_user_validation.set()
+
+
+
+async def check_correct_group_format(callback: types.CallbackQuery, state: FSMContext, db: AsyncSession):
+    if callback.data == "yes":
+        await callback.message.answer("Прекрасно, лови меню✅", reply_markup=menu_1)
+        await NewUser.menu_1.set()
+        # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В ТАБЛИЦУ
+    else:
+        await callback.message.answer("Ничего страшного, начнем заново", reply_markup=menu_1_1_keyboard)
+        await NewUser.choice_team.set()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ########################################################################################################################
 def register_start(dp: Dispatcher):
     dp.register_message_handler(start, CommandStart())
@@ -79,6 +127,10 @@ def register_start(dp: Dispatcher):
     dp.register_message_handler(add_kodland_ID, state=NewUser.add_ID)
     dp.register_callback_query_handler(check_user_validation, state=NewUser.check_user_validation)
     dp.register_callback_query_handler(first_menu, state=NewUser.menu_1)
+
+    dp.register_callback_query_handler(changing_format_training, text="one")
+    dp.register_message_handler(add_new_changing_format, state=menu_1_1.change_format)
+    dp.register_callback_query_handler(check_correct_group_format, state=NewUser.check_user_validation)
 
     # dp.register_message_handler(adding_student_by_link,
     #                            CommandStart(deep_link=re.compile(r"^[A-Z]{4,15}$")))
