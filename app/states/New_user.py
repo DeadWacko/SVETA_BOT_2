@@ -16,8 +16,16 @@ class NewUser(StatesGroup):
 
 class menu_1_1(StatesGroup):
     get_back_link = State()
-
+    get_back_link_2 = State()
+    get_back_link_3 = State()
+    yes_no_3 = State()
+    concellation = State()
+    old_data = State()
+    new_data = State()
+    check_correct_cancellation = State()
+    check_correct_return = State()
     change_format = State()
+    couse_return = State()
     check_correct_format = State()
     reason_return = State()
     twelve_hour = State()
