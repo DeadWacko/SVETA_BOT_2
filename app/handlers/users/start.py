@@ -255,6 +255,106 @@ async def check_correct_question_cash(callback: types.CallbackQuery, state: FSMC
     state.finish()
 
 
+########################################################################################################################
+                                    # перевод ученика куда-то
+#Просим ввести ссылку +
+async def send_message_with_link_5(callback: types.CallbackQuery):
+    await callback.message.edit_text("Введите ссылку на ученика:")
+    await menu_1_1.get_back_link_5.set()
+
+
+# хватаем ссылочку на ученика +
+async def get_link_5(message: types.Message, state: FSMContext, db: AsyncSession):
+    async with state.proxy() as data:
+        data["link"] = message.text
+    await message.answer("На какой курс перевод?",)
+    await menu_1_1.new_course.set()
+
+# хватаем новый курс ученика +
+async def get_new_course(message: types.Message, state: FSMContext, db: AsyncSession):
+    async with state.proxy() as data:
+        data["new_course"] = message.text
+    await message.answer("Меняется ли преподаватель?",reply_markup=yesno_keyboard_markup)
+    await menu_1_1.check_teacher_change.set()
+
+#Проверяем меняется ли преподаватель ( да/нет) -> Проверяем меняется ли расписание
+async def check_teacher_change(callback: types.CallbackQuery, state: FSMContext, db: AsyncSession):
+    if callback.data == "yes":
+        async with state.proxy() as data:
+            data["teacher_change"] = "Да"
+        await callback.message.edit_text("Меняется ли расписание?",reply_markup=yesno_keyboard_markup)
+
+    else:
+        async with state.proxy() as data:
+            data["teacher_change"] = "Нет"
+        await callback.message.edit_text("Меняется ли расписание?",reply_markup=yesno_keyboard_markup)
+    # состояние для отмены/переноса
+    await menu_1_1.check_shedule.set()
+
+#Проверяем меняется ли расписание(да/нет) -> Если да - просим ввести новую дату. Если нет - выводим все данные до текущего момента и просим их проверить.
+async def check_shedule(callback: types.CallbackQuery, state: FSMContext, db: AsyncSession):
+    if callback.data == "yes":
+        async with state.proxy() as data:
+            data["shedule_change"] = "Да"
+        await callback.message.edit_text("Введите новое расписание:")
+        await menu_1_1.get_new_date.set()
+        print("Вводим дату")
+
+    else:
+        async with state.proxy() as data:
+
+
+            async with state.proxy() as data:
+                await callback.message.edit_text(
+                    f"Давай проверим твои данные:\n\t\t ссылка на ученика: {data['link']} \n\t\t Новый курс: {data['new_course']}"
+                    f"\n\t\t Меняется ли преподаватель: {data['teacher_change']}\n\t\t Новое расписание: Нет"
+                    f"\n Все верно??",
+                    reply_markup=yesno_keyboard_markup)
+                await menu_1_1.check_question_change_1.set()
+
+        #Проверяем все ли правильно ввел пользователь
+
+async def check_correct_migration_1(callback: types.CallbackQuery, state: FSMContext, db: AsyncSession):
+    if callback.data == "yes":
+        await callback.message.edit_text("Прекрасно, лови меню✅", reply_markup=menu_1)
+        # await NewUser.menu_1.set()
+        # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В ТАБЛИЦУ
+    else:
+        await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=menu_1)
+
+
+
+async def get_new_date(message: types.Message, state: FSMContext, db: AsyncSession):
+
+    new_date = message.text
+    async with state.proxy() as data:
+        data['new_date'] = new_date
+        await message.answer("Введите новое время")
+
+        await menu_1_1.get_new_time.set()
+
+
+async def get_new_time(message: types.Message, state: FSMContext, db: AsyncSession):
+    new_time = message.text
+    async with state.proxy() as data:
+        await message.answer(
+            f"Давай проверим твои данные:\n\t\t ссылка на ученика: {data['link']} \n\t\t Новый курс: {data['new_course']}"
+            f"\n\t\t Меняется ли преподаватель: {data['teacher_change']}\n\t\t Меняется ли расписание: {data['shedule_change']}"
+            f"\n\t\t Новое расписание: {data['new_date']}\n\t\t Новое время: {new_time}"
+            f"\n Все верно??",
+            reply_markup=yesno_keyboard_markup)
+        await menu_1_1.check_question_change_2.set()
+
+
+async def check_correct_migration_2(callback: types.CallbackQuery, state: FSMContext, db: AsyncSession):
+    if callback.data == "yes":
+        await callback.message.edit_text("Прекрасно, лови меню✅", reply_markup=menu_1)
+        # await NewUser.menu_1.set()
+        # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В ТАБЛИЦУ
+    else:
+        await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=menu_1)
+    state.finish()
+
 
 
 
@@ -303,6 +403,29 @@ def register_start(dp: Dispatcher):
     dp.register_message_handler(get_link_4, state=menu_1_1.get_back_link_4)
     dp.register_message_handler(get_question_cash, state=menu_1_1.question_cash)
     dp.register_callback_query_handler(check_correct_question_cash, state=menu_1_1.check_question_cash)
+    #Перевод ученика куда-то
+
+    dp.register_callback_query_handler(send_message_with_link_5, text="five", state="*")  # +
+    dp.register_message_handler(get_link_5, state=menu_1_1.get_back_link_5)  # +
+    dp.register_message_handler(get_new_course, state=menu_1_1.new_course)  # +
+    dp.register_callback_query_handler(check_teacher_change, state=menu_1_1.check_teacher_change)  # +
+    dp.register_callback_query_handler(check_shedule, state=menu_1_1.check_shedule)  # +
+    dp.register_message_handler(get_new_date, state=menu_1_1.get_new_date)  # +
+    dp.register_callback_query_handler(check_correct_migration_1, state=menu_1_1.check_question_change_1)  # +
+    dp.register_message_handler(get_new_time, state=menu_1_1.get_new_time)  # +
+    dp.register_callback_query_handler(check_correct_migration_2, state=menu_1_1.check_question_change_2)  # +
+
+
+
+
+
+
+
+
+
+
+
+
     # dp.register_message_handler(adding_student_by_link,
     #                            CommandStart(deep_link=re.compile(r"^[A-Z]{4,15}$")))
 
