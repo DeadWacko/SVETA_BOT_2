@@ -1,3 +1,4 @@
+from datetime import datetime
 import random
 import re
 from aiogram import types, Dispatcher
@@ -18,7 +19,7 @@ async def start(message: types.Message, db: AsyncSession):
     """Старт. В зависимости от того Новый/старый пользователь перед нами отвечаем ему. Если новый - добавляем. Если старый-кидаем ему меню"""
     data = await db.get(User, message.from_user.id)  # Грузим все данные по этому пользователю из БД
     if type(data) != NoneType:  # Если пользователь есть - то грузим его сразу в меню. Иначе грузим его в ф-ю добавления
-        await message.answer(f"Так,ты уже есть. Лови сразу меню:3")
+        await message.answer(f"Так,ты уже есть. Лови сразу меню:3",reply_markup=menu_1)
         # Кидаем его в состояние основного меню и отправляем клавиатуру
         # await NewUser.state_new_user.set()
         await NewUser.menu_1.set()
@@ -48,6 +49,7 @@ async def add_fullname(message: types.Message, state: FSMContext, db: AsyncSessi
 async def add_kodland_ID(message: types.Message, state: FSMContext, db: AsyncSession):
     user_kodland_id = message.text
     async with state.proxy() as data:
+        data['kodland_id'] = user_kodland_id
         await message.answer(
             f"Давай проверим твои данные:\n\t\t Номер команды: {data['team_name']} \n\t\t Твое ФИО: {data['full_name']}\n\t\t Твой ID: {user_kodland_id}\n Все верно??",
             reply_markup=yesno_keyboard_markup)
@@ -60,6 +62,15 @@ async def check_user_validation(callback: types.CallbackQuery, state: FSMContext
         await callback.message.edit_text("Прекрасно, лови меню✅", reply_markup=menu_1)
         await NewUser.menu_1.set()
         # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В БД
+        async with state.proxy() as data:
+            new_user = User(telegram_id=callback.from_user.id)
+            new_user.teacher_id = data['kodland_id']
+            new_user.time = str(datetime.now())
+            new_user.team = data["team_name"]
+            new_user.fullname = data['full_name']
+            db.add(new_user)
+            await db.commit()
+            await state.finish()
     else:
         await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=team_keyboard)
         await NewUser.choice_team.set()
@@ -101,6 +112,7 @@ async def check_correct_group_format(callback: types.CallbackQuery, state: FSMCo
         await callback.message.edit_text("Прекрасно, лови меню✅", reply_markup=menu_1)
         # await NewUser.menu_1.set()
         # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В ТАБЛИЦУ
+        await callback.answer("Ваш запрос отправлен! Спасибо.")
     else:
         await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=menu_1_1_keyboard)
 
@@ -138,6 +150,7 @@ async def check_correct_return(callback: types.CallbackQuery, state: FSMContext,
         await callback.message.edit_text("Прекрасно, лови меню✅", reply_markup=menu_1)
         # await NewUser.menu_1.set()
         # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В ТАБЛИЦУ
+        await callback.answer("Ваш запрос отправлен! Спасибо.")
     else:
         await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=menu_1_1_keyboard)
 
@@ -213,6 +226,7 @@ async def check_correct_cancellation(callback: types.CallbackQuery, state: FSMCo
         await callback.message.edit_text("Прекрасно, лови меню✅", reply_markup=menu_1)
         # await NewUser.menu_1.set()
         # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В ТАБЛИЦУ
+        await callback.answer("Ваш запрос отправлен! Спасибо.")
     else:
         await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=menu_1_1_keyboard)
 
@@ -248,6 +262,7 @@ async def check_correct_question_cash(callback: types.CallbackQuery, state: FSMC
         await callback.message.edit_text("Прекрасно, лови меню✅", reply_markup=menu_1)
         # await NewUser.menu_1.set()
         # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В ТАБЛИЦУ
+        await callback.answer("Ваш запрос отправлен! Спасибо.")
     else:
         await callback.message.edit_text("Ничего страшного, начнем зановоggeg", reply_markup=menu_1)
     state.finish()
@@ -320,6 +335,7 @@ async def check_correct_migration_1(callback: types.CallbackQuery, state: FSMCon
         await callback.message.edit_text("Прекрасно, лови меню✅", reply_markup=menu_1)
         # await NewUser.menu_1.set()
         # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В ТАБЛИЦУ
+        await callback.answer("Ваш запрос отправлен! Спасибо.")
     else:
         await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=menu_1)
 
@@ -350,13 +366,14 @@ async def check_correct_migration_2(callback: types.CallbackQuery, state: FSMCon
         await callback.message.edit_text("Прекрасно, лови меню✅", reply_markup=menu_1)
         # await NewUser.menu_1.set()
         # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В ТАБЛИЦУ
+        await callback.answer("Ваш запрос отправлен! Спасибо.")
     else:
         await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=menu_1)
     state.finish()
 
 
 ########################################################################################################################
-                                                # Прогул занятия
+# Прогул занятия
 # Просим ввести ссылку +
 async def send_message_with_link_6(callback: types.CallbackQuery):
     await callback.message.edit_text("Введите ссылку на ученика:")
@@ -399,12 +416,14 @@ async def check_gets_in_touch(callback: types.CallbackQuery, state: FSMContext, 
                     reply_markup=yesno_keyboard_markup)
                 await menu_1_1.correct_number_missed_classes_1.set()
 
-#Клавиатура ДА/Нет с проверкой данных, если ученик не выходит на связь (menu_1_1.correct_number_missed_classes_1)
+
+# Клавиатура ДА/Нет с проверкой данных, если ученик не выходит на связь (menu_1_1.correct_number_missed_classes_1)
 async def check_correct_number_missed_classes_1(callback: types.CallbackQuery, state: FSMContext, db: AsyncSession):
     if callback.data == "yes":
         await callback.message.edit_text("Прекрасно, лови меню✅", reply_markup=menu_1)
         # await NewUser.menu_1.set()
         # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В ТАБЛИЦУ
+        await callback.answer("Ваш запрос отправлен! Спасибо.")
     else:
         await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=menu_1)
     state.finish()
@@ -431,19 +450,21 @@ async def checking_whether_the_cause_was_reported(callback: types.CallbackQuery,
                     reply_markup=yesno_keyboard_markup)
                 await menu_1_1.correct_cause_missed_classes_1.set()
 
-#Клавиатура ДА/Нет с проверкой данных, если ученик не сообщил причину (menu_1_1.correct_cause_missed_classes_1)
+
+# Клавиатура ДА/Нет с проверкой данных, если ученик не сообщил причину (menu_1_1.correct_cause_missed_classes_1)
 async def check_correct_cause_missed_classes_1(callback: types.CallbackQuery, state: FSMContext, db: AsyncSession):
     if callback.data == "yes":
         await callback.message.edit_text("Прекрасно, лови меню✅", reply_markup=menu_1)
         # await NewUser.menu_1.set()
         # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В ТАБЛИЦУ
+        await callback.answer("Ваш запрос отправлен! Спасибо.")
     else:
         await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=menu_1)
         await state.finish()
 
 
-#get_reason_for_missing
-#хватаем причину
+# get_reason_for_missing
+# хватаем причину
 
 async def get_reason_for_missing(message: types.Message, state: FSMContext, db: AsyncSession):
     reason = message.text
@@ -463,12 +484,10 @@ async def check_correct_missed_reason_2(callback: types.CallbackQuery, state: FS
         await callback.message.edit_text("Прекрасно, лови меню✅", reply_markup=menu_1)
         # await NewUser.menu_1.set()
         # ВЫГРУЖАЕМ ВСЕ ДАННЫЕ В ТАБЛИЦУ
+        await callback.answer("Ваш запрос отправлен! Спасибо.")
     else:
         await callback.message.edit_text("Ничего страшного, начнем заново", reply_markup=menu_1)
     state.finish()
-
-
-
 
 
 async def exit(callback: types.CallbackQuery):
@@ -483,15 +502,15 @@ def register_start(dp: Dispatcher):
     dp.register_message_handler(add_kodland_ID, state=NewUser.add_ID)
     dp.register_callback_query_handler(check_user_validation, state=NewUser.check_user_validation)
     dp.register_callback_query_handler(first_menu, text="questions_about_students", state="*")
-    dp.register_callback_query_handler(exit, text="exit")
+    dp.register_callback_query_handler(exit, text="exit",state="*")
 
     # Смена формата обучения
-    dp.register_callback_query_handler(send_message_with_link, text="one")
+    dp.register_callback_query_handler(send_message_with_link, text="one",state="*")
     dp.register_message_handler(get_link, state=menu_1_1.get_back_link)
     dp.register_message_handler(get_new_format, state=menu_1_1.change_format)
     dp.register_callback_query_handler(check_correct_group_format, state=menu_1_1.check_correct_format)
     # Хочет бросить обучение /Сделать возврат
-    dp.register_callback_query_handler(send_message_with_link_2, text="two")
+    dp.register_callback_query_handler(send_message_with_link_2, text="two",state="*")
     dp.register_message_handler(get_link_2, state=menu_1_1.get_back_link_2)
     dp.register_message_handler(get_cause_return, state=menu_1_1.couse_return)
     dp.register_callback_query_handler(check_correct_return, state=menu_1_1.check_correct_return)
@@ -520,18 +539,20 @@ def register_start(dp: Dispatcher):
     dp.register_message_handler(get_new_time, state=menu_1_1.get_new_time)  # +
     dp.register_callback_query_handler(check_correct_migration_2, state=menu_1_1.check_question_change_2)  # +
 
-    #Прогул занятий
+    # Прогул занятий
     dp.register_callback_query_handler(send_message_with_link_6, text="six", state="*")  # +
     dp.register_message_handler(get_link_6, state=menu_1_1.get_back_link_6)  # +
     dp.register_message_handler(get_number_missed_classes, state=menu_1_1.get_number_missed_classes)  # +
     dp.register_callback_query_handler(check_gets_in_touch, state=menu_1_1.get_in_touch)  # +
-    dp.register_callback_query_handler(check_correct_number_missed_classes_1, state=menu_1_1.correct_number_missed_classes_1)  # +
-    dp.register_callback_query_handler(checking_whether_the_cause_was_reported, state=menu_1_1.check_reason_for_missing) # +
-    dp.register_callback_query_handler(check_correct_cause_missed_classes_1, state=menu_1_1.correct_cause_missed_classes_1) # +
+    dp.register_callback_query_handler(check_correct_number_missed_classes_1,
+                                       state=menu_1_1.correct_number_missed_classes_1)  # +
+    dp.register_callback_query_handler(checking_whether_the_cause_was_reported,
+                                       state=menu_1_1.check_reason_for_missing)  # +
+    dp.register_callback_query_handler(check_correct_cause_missed_classes_1,
+                                       state=menu_1_1.correct_cause_missed_classes_1)  # +
     dp.register_message_handler(get_reason_for_missing, state=menu_1_1.get_reason_for_missing)  # +
 
     dp.register_callback_query_handler(check_correct_missed_reason_2, state=menu_1_1.check_question_change_2)  #
-
 
     # dp.register_message_handler(adding_student_by_link,
     #                            CommandStart(deep_link=re.compile(r"^[A-Z]{4,15}$")))

@@ -46,8 +46,8 @@ yesno_keyboard_markup = InlineKeyboardMarkup().add(yes).add(no)
 ########################################################################################################################
 #Основная клавиатура меню
 questions_about_students = InlineKeyboardButton('Все вопросы, связанные с учениками', callback_data='questions_about_students')
-teacher_related_questions= InlineKeyboardButton('Все вопросы,связанные с преподавателями', callback_data='teacher_related_questions')
-other_questions= InlineKeyboardButton('Другое, не похожее ни на что', callback_data='other_questions')
+teacher_related_questions= InlineKeyboardButton('❌Все вопросы,связанные с преподавателями❌', callback_data='teacher_related_questions')
+other_questions= InlineKeyboardButton('❌Другое, не похожее ни на что❌', callback_data='other_questions')
 menu_1 = InlineKeyboardMarkup().add(questions_about_students).add(teacher_related_questions).add(other_questions)
 
 ########################################################################################################################
@@ -58,9 +58,9 @@ three = InlineKeyboardButton('Отмена/перенос', callback_data='three
 four = InlineKeyboardButton('Оплата учеников', callback_data='four')
 five = InlineKeyboardButton('Перевод ученика(куда-то)', callback_data='five')
 six = InlineKeyboardButton('Прогул занятия', callback_data='six')
-seven = InlineKeyboardButton('Изменение данных ученика', callback_data='seven')
-eight = InlineKeyboardButton('Ученик не получил сертификат', callback_data='eight')
-nine = InlineKeyboardButton('Негатив на преподавателя/кого-то еще', callback_data='nine')
+seven = InlineKeyboardButton('❌Изменение данных ученика❌', callback_data='seven')
+eight = InlineKeyboardButton('❌Ученик не получил сертификат❌', callback_data='eight')
+nine = InlineKeyboardButton('❌Негатив на преподавателя/кого-то еще❌', callback_data='nine')
 exit = InlineKeyboardButton('EXIT', callback_data='exit')
 menu_1_1_keyboard = InlineKeyboardMarkup().add(one).add(two).add(three).add(four).add(five).add(six).add(seven).add(eight).add(nine).add(exit)
 

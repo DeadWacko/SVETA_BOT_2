@@ -6,7 +6,7 @@ from .base import Base
 class User(Base):
     __tablename__ = 'users'
     telegram_id = Column(BIGINT, primary_key=True)
-    teacher_id = Column(BIGINT)
+    teacher_id = Column(String)
     time = Column(String)
     team = Column(String)
     fullname = Column(String)
